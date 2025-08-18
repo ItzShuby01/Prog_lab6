@@ -34,7 +34,6 @@ public class ServerCommandManager implements CommandExecutable {
         AverageOfHeight averageOfHeightCmd = new AverageOfHeight(collectionManager);
         Clear clearCmd = new Clear(collectionManager);
         CountByLocation countByLocationCmd = new CountByLocation(collectionManager);
-        Exit exitCmd = new Exit();
         History historyCmd = new History();
         Info infoCmd = new Info(collectionManager);
         MaxById maxByIdCmd = new MaxById(collectionManager);
@@ -51,8 +50,7 @@ public class ServerCommandManager implements CommandExecutable {
         registerServerCommand("add_if_max", cmd -> addIfMaxCmd.execute((AddIfMaxCommand) cmd), addIfMaxCmd);
         registerServerCommand("average_of_height", cmd -> averageOfHeightCmd.execute((AverageOfHeightCommand) cmd), averageOfHeightCmd);
         registerServerCommand("clear", cmd -> clearCmd.execute((ClearCommand) cmd), clearCmd);
-        registerServerCommand("count_by_location", cmd -> countByLocationCmd.execute((CountByLocationCommand) cmd), countByLocationCmd);
-        registerServerCommand("exit", cmd -> exitCmd.execute((ExitCommand) cmd), exitCmd);
+        registerServerCommand("count_by_location", countByLocationCmd::execute, countByLocationCmd);
         registerServerCommand("help", cmd -> helpCmd.execute((HelpCommand) cmd), helpCmd);
         registerServerCommand("history", cmd -> historyCmd.execute((HistoryCommand) cmd, new ArrayList<>(commandHistory)), historyCmd);
         registerServerCommand("info", cmd -> infoCmd.execute((InfoCommand) cmd), infoCmd);
@@ -89,7 +87,6 @@ public class ServerCommandManager implements CommandExecutable {
                 return new Response("Internal server error: Mismatched command DTO type for '" + commandName + "'. " + e.getMessage(), false);
             } catch (Exception e) {
                 System.err.println("Error executing command '" + commandName + "': " + e.getMessage());
-                e.printStackTrace();
                 return new Response("Server error during command execution: " + e.getMessage(), false);
             }
         } else {
