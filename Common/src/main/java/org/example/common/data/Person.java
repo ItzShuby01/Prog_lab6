@@ -1,19 +1,27 @@
 package org.example.common.data;
 
+import org.example.common.util.LocalDateTimeAdapter;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Person implements Comparable<Person>, Serializable {
     private static final long serialVersionUID = 1L;
     private Integer id; // Unique ID, non-nullable, auto-generated
     private String name; // non-null, non-empty string
-    private Coordinates coordinates; // non-null
+    private Coordinates coordinates;// non-null
+    @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
     private LocalDateTime creationDate; // non-null, auto-generated
     private Double height; // greater than 0
     private EyeColor eyeColor; // non-null
     private HairColor hairColor; // non-null
     private Country nationality; // nullable
     private Location location; // nullable
+
 
     public Person(Integer id, String name, Coordinates coordinates, LocalDateTime creationDate, Double height, EyeColor eyeColor, HairColor hairColor, Country nationality, Location location) {
         this.id = id;
@@ -57,17 +65,21 @@ public class Person implements Comparable<Person>, Serializable {
 
     @Override
     public String toString() {
-        return "Person{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", coordinates=" + coordinates +
-                ", creationDate=" + creationDate +
-                ", height=" + height +
-                ", eyeColor=" + eyeColor +
-                ", hairColor=" + hairColor +
-                ", nationality=" + nationality +
-                ", location=" + location +
-                '}';
+        String personString = "PERSON DATA \n";
+        personString += "id: " + id + "\n";
+        personString += "name: " + name + "\n";
+        personString += coordinates.toString() + "\n";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        String formattedDate = creationDate.format(formatter);
+
+        personString += "creation date: " + formattedDate + "\n";
+        personString += "height: " + height + "\n";
+        personString += "eye color: " + eyeColor + "\n";
+        personString += "hair color: " + hairColor + "\n";
+        personString += "Nationality: " + (nationality == null ? "Not specified" : nationality) + "\n";
+        personString += "Location: " + (location == null ? "Not specified" : location.toString());
+        return personString;
     }
 
     // Implementing equals and hashCode, important for collection operations

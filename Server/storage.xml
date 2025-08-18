@@ -1,14 +1,2 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<persons>
-    <person>
-        <coordinates>
-            <x>2</x>
-            <y>2.0</y>
-        </coordinates>
-        <creationDate/>
-        <eyeColor>RED</eyeColor>
-        <hairColor>GREEN</hairColor>
-        <height>22.0</height>
-        <name>exit</name>
-    </person>
-</persons>
+<persons/>

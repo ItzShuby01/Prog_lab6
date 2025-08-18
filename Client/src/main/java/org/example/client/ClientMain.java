@@ -6,11 +6,14 @@ import org.example.client.util.ConsoleIOService;
 import org.example.client.util.IOService;
 import org.example.common.command.Command;
 import org.example.common.command.ExitCommand;
+import org.example.common.command.ShowCommand;
+import org.example.common.data.Person;
 import org.example.common.response.Response;
 
 import java.io.IOException;
 import java.net.PortUnreachableException;
 import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.Scanner;
 
 public class ClientMain {
@@ -34,10 +37,8 @@ public class ClientMain {
             System.err.println("Using default server: " + DEFAULT_SERVER_HOST + ":" + DEFAULT_SERVER_PORT);
         }
 
-        IOService ioService = null;
-        UDPClient client = null;
-        try {
-            ioService = new ConsoleIOService(new Scanner(System.in));
+        UDPClient client;
+        try(IOService ioService= new ConsoleIOService(new Scanner(System.in))) {
             CommandParser commandParser = new CommandParser(ioService);
             client = new UDPClient(serverHost, serverPort);
 
@@ -51,7 +52,7 @@ public class ClientMain {
                     continue; // Skip empty input
                 }
 
-                Command command = null;
+                Command command ;
                 try {
                     command = commandParser.parseCommand(line);
                 } catch (IllegalArgumentException e) {
@@ -68,12 +69,36 @@ public class ClientMain {
                     break;
                 }
 
-                Response response = null;
                 try {
-                    response = client.sendAndReceive(command);
+                    Response response  = client.sendAndReceive(command);
                     if (response != null) {
                         if (response.isSuccess()) {
                             ioService.print("Server Response: " + response.getMessage());
+
+                            // --- START OF THE ADDED BLOCK FOR SHOW COMMAND DATA ---
+                            if (command instanceof ShowCommand && response.getData() != null) {
+                                if (response.getData() instanceof List) {
+                                    List<?> dataList = (List<?>) response.getData();
+                                    if (dataList.isEmpty()) {
+                                        ioService.print("The collection is empty.");
+                                    } else {
+                                        ioService.print("--- Collection Data ---");
+                                        for (Object item : dataList) {
+                                            if (item instanceof Person) {
+                                                ioService.print(((Person) item).toString()); // Print Person details
+                                            } else {
+                                                ioService.print(item.toString()); // Fallback for other types
+                                            }
+                                        }
+                                        ioService.print("--- End Collection Data ---");
+                                    }
+                                } else {
+                                    // This case indicates an unexpected data type if it's a ShowCommand
+                                    ioService.print("Received unexpected data type for ShowCommand: " + response.getData().getClass().getName());
+                                }
+                            }
+                            // --- END OF THE ADDED BLOCK FOR SHOW COMMAND DATA ---
+
                         } else {
                             ioService.print("Server Error: " + response.getMessage());
                         }
@@ -90,19 +115,11 @@ public class ClientMain {
                     ioService.print("Received unknown object from server: " + e.getMessage());
                 } catch (Exception e) {
                     ioService.print("An unexpected error occurred: " + e.getMessage());
-                    e.printStackTrace();
                 }
             }
 
         } catch (IOException e) {
             System.err.println("Error initializing client: " + e.getMessage());
-        } finally {
-            if (ioService != null) {
-                ioService.close(); // Close Scanner
-            }
-            if (client != null) {
-                client.close(); // Close UDP socket
-            }
         }
     }
 }
