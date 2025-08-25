@@ -6,6 +6,7 @@ import org.example.client.util.ConsoleIOService;
 import org.example.client.util.IOService;
 import org.example.common.command.Command;
 import org.example.common.command.ExecuteScriptCommand;
+import org.example.common.command.HelpCommand;
 import org.example.common.command.ShowCommand;
 import org.example.common.data.Person;
 import org.example.common.response.Response;
@@ -88,7 +89,18 @@ public class ClientMain {
                     Response response  = client.sendAndReceive(command);
                     if (response != null) {
                         if (response.isSuccess()) {
+                            if(command instanceof HelpCommand){
+                                String helpMessage = "Client-side commands:\n"
+                                        + "  " + HelpCommand.EXECUTE_SCRIPT_DESCRIPTION + "\n"
+                                        + "  exit: close the application\n"
+                                        + "\n"
+                                        + "Server-side commands:\n"
+                                        + response.getMessage(); // This is the help message from the server
+                                ioService.print(helpMessage);
+                            } else {
+                                // For all other commands, print the server's message normally
                             ioService.print("Server Response: " + response.getMessage());
+                            }
 
                             // --- START OF THE ADDED BLOCK FOR SHOW COMMAND DATA ---
                             if (command instanceof ShowCommand && response.getData() != null) {
