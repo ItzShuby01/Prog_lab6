@@ -37,13 +37,14 @@ public class Response implements Serializable {
 
     @Override
     public String toString() {
-        String base = (success ? "[SUCCESS] " : "[ERROR] ") + message;
+        StringBuilder builder = new StringBuilder();
+        builder.append(success ? "[SUCCESS] " : "[ERROR] ").append(message);
         if (data != null) {
-            base += "\nData type: " + data.getClass().getSimpleName();
+            builder.append("\nData type: ").append(data.getClass().getSimpleName());
             if (data instanceof java.util.List) {
-                base += ", Size: " + ((java.util.List<?>) data).size();
+                builder.append(", Size: ").append (((java.util.List<?>) data).size());
             }
         }
-        return base;
+        return builder.toString();
     }
 }

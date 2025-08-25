@@ -5,7 +5,7 @@ import org.example.client.util.CommandParser;
 import org.example.client.util.ConsoleIOService;
 import org.example.client.util.IOService;
 import org.example.common.command.Command;
-import org.example.common.command.ExitCommand;
+import org.example.common.command.ExecuteScriptCommand;
 import org.example.common.command.ShowCommand;
 import org.example.common.data.Person;
 import org.example.common.response.Response;
@@ -39,8 +39,9 @@ public class ClientMain {
 
         UDPClient client;
         try(IOService ioService= new ConsoleIOService(new Scanner(System.in))) {
-            CommandParser commandParser = new CommandParser(ioService);
             client = new UDPClient(serverHost, serverPort);
+            CommandParser commandParser = new CommandParser(ioService,client);
+
 
             ioService.print("Client started. Connecting to server " + serverHost + ":" + serverPort);
             ioService.print("Type 'help' for available commands or 'exit' to quit.");
@@ -54,8 +55,23 @@ public class ClientMain {
 
                 Command command ;
                 try {
+                    if (line.trim().toLowerCase().startsWith("exit")) {
+                        ioService.print("Exiting client application. Goodbye!");
+                        break;
+                    }
+                    if (line.trim().toLowerCase().startsWith("execute_script")) {
+                        String filePath = line.trim().split("\\s+", 2).length > 1 ? line.trim().split("\\s+", 2)[1] : "";
+                        if (filePath.isEmpty()) {
+                            ioService.print("Client Command Error: execute_script requires a file path.");
+                            continue;
+                        }
+                        commandParser.runLocalCommand(new ExecuteScriptCommand(filePath));
+                        continue;
+                    }
+
+                    // For all other commands, parse and send to server
                     command = commandParser.parseCommand(line);
-                } catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException | ClassNotFoundException e) {
                     ioService.print("Client Command Error: " + e.getMessage());
                     continue;
                 } catch (IOException e) {
@@ -63,10 +79,9 @@ public class ClientMain {
                     continue;
                 }
 
-                // Check if it's the client-side 'exit' command
-                if (command instanceof ExitCommand) {
-                    ioService.print("Exiting client application. Goodbye!");
-                    break;
+                // If the command is null (e.g., if a local command was handled), skip the rest
+                if (command == null) {
+                    continue;
                 }
 
                 try {

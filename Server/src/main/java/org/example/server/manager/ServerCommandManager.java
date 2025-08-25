@@ -42,7 +42,6 @@ public class ServerCommandManager implements CommandExecutable {
         Save saveCmd = new Save(collectionManager, fileManager);
         Show showCmd = new Show(collectionManager);
         Help helpCmd = new Help(this);
-        ExecuteScript executeScriptCmd = new ExecuteScript(fileManager, collectionManager);
 
 
         // Each lambda performs the necessary type casting and calls the specific command's execute method.
@@ -60,7 +59,6 @@ public class ServerCommandManager implements CommandExecutable {
         registerServerCommand("save", cmd -> saveCmd.execute((SaveCommand) cmd), saveCmd); // Server-side save
         registerServerCommand("show", cmd -> showCmd.execute((ShowCommand) cmd), showCmd);
         registerServerCommand("update", cmd -> updateCmd.execute((UpdateCommand) cmd), updateCmd);
-        registerServerCommand("execute_script", cmd -> executeScriptCmd.execute((ExecuteScriptCommand) cmd, this), executeScriptCmd); // Pass 'this'
     }
 
     // Helper method to register commands consistently

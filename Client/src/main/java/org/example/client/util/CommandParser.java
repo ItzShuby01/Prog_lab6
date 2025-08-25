@@ -1,19 +1,34 @@
 package org.example.client.util;
 
+import org.example.client.network.UDPClient;
 import org.example.common.command.*;
 import org.example.common.data.Person;
+import org.example.common.response.Response;
 
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CommandParser {
 
     private final IOService ioService;
     private final PersonIOService personIOService;
+    private final UDPClient client;
+    private final Set<String> executingScripts = new HashSet<>(); //For recursion detection
 
-    public CommandParser(IOService ioService) {
+    public CommandParser(IOService ioService, UDPClient client) {
         this.ioService = ioService;
+        this.client = client;
         this.personIOService = new PersonIOService(ioService);
+    }
+
+
+    public void runLocalCommand(Command command) throws IOException, ClassNotFoundException{
+        if(command instanceof ExecuteScriptCommand) executeScript((ExecuteScriptCommand) command);
     }
 
     public Command parseCommand(String input) throws IOException {
@@ -69,6 +84,39 @@ public class CommandParser {
                 return new CountByLocationCommand(arg);
             default:
                 throw new IllegalArgumentException("Unknown command: " + commandName);
+        }
+    }
+
+    private void executeScript(ExecuteScriptCommand command) throws IOException, ClassNotFoundException {
+        String filePath = command.getArg();
+        ioService.print("Executing script from file: " + filePath);
+
+        if (executingScripts.contains(filePath)) {
+            ioService.print("Error: Recursive script execution detected for: " + filePath);
+            return;
+        }
+
+        try {
+            executingScripts.add(filePath);
+            List<String> scriptLines = Files.readAllLines(Path.of(filePath));
+
+            for (String line : scriptLines) {
+                if (line.trim().isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+
+                ioService.print("--- Executing command from script: " + line);
+                Command cmdFromScript = parseCommand(line);
+
+                if (cmdFromScript instanceof ExecuteScriptCommand) {
+                    runLocalCommand(cmdFromScript);
+                } else {
+                    Response response = client.sendAndReceive(cmdFromScript);
+                    ioService.print("Server Response for '" + line + "': " + response.getMessage());
+                }
+            }
+        } finally {
+            executingScripts.remove(filePath);
         }
     }
 }
