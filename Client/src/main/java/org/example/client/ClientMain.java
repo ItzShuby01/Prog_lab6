@@ -93,6 +93,7 @@ public class ClientMain {
                                 String helpMessage = "Client-side commands:\n"
                                         + "  " + HelpCommand.EXECUTE_SCRIPT_DESCRIPTION + "\n"
                                         + "  exit: close the application\n"
+                                        + "  save: server automatically saves the collection to the specified xml file upon shutdown\n"
                                         + "\n"
                                         + "Server-side commands:\n"
                                         + response.getMessage(); // This is the help message from the server

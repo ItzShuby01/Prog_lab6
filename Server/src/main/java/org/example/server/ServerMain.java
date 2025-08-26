@@ -34,7 +34,6 @@ public class ServerMain {
             System.out.println("Collection loaded successfully.");
         } catch (Exception e) {
             System.err.println("Error loading collection: " + e.getMessage());
-            System.out.println("Starting with an empty collection.");
         }
 
         // Initialize the managers and Server network
@@ -47,7 +46,7 @@ public class ServerMain {
             // Save data before stopping
             try {
                 commandManager.internalSave();
-                System.out.println("Collection saved on shutdown.");
+                System.out.println("Collection successfully saved on shutdown.");
             } catch (Exception e) {
                 System.err.println("Error saving collection on shutdown: " + e.getMessage());
             } finally {

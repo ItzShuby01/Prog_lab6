@@ -34,7 +34,6 @@ public class FileManager {
             }
             TreeSet<Person> loadedCollection = new TreeSet<>(persons);
             collectionManager.setPersonTreeSet(loadedCollection);
-            System.out.println("Collection loaded successfully!");
         } catch (JAXBException e) {
             System.out.println("Error loading collection: " + e.getMessage());
         }

@@ -39,7 +39,6 @@ public class ServerCommandManager implements CommandExecutable {
         MaxById maxByIdCmd = new MaxById(collectionManager);
         RemoveById removeByIdCmd = new RemoveById(collectionManager);
         RemoveLower removeLowerCmd = new RemoveLower(collectionManager);
-        Save saveCmd = new Save(collectionManager, fileManager);
         Show showCmd = new Show(collectionManager);
         Help helpCmd = new Help(this);
 
@@ -56,7 +55,6 @@ public class ServerCommandManager implements CommandExecutable {
         registerServerCommand("max_by_id", cmd -> maxByIdCmd.execute((MaxByIdCommand) cmd), maxByIdCmd);
         registerServerCommand("remove_by_id", cmd -> removeByIdCmd.execute((RemoveByIdCommand) cmd), removeByIdCmd);
         registerServerCommand("remove_lower", cmd -> removeLowerCmd.execute((RemoveLowerCommand) cmd), removeLowerCmd);
-        registerServerCommand("save", cmd -> saveCmd.execute((SaveCommand) cmd), saveCmd); // Server-side save
         registerServerCommand("show", cmd -> showCmd.execute((ShowCommand) cmd), showCmd);
         registerServerCommand("update", cmd -> updateCmd.execute((UpdateCommand) cmd), updateCmd);
     }
@@ -106,8 +104,16 @@ public class ServerCommandManager implements CommandExecutable {
     }
 
     // Method for server-internal save, not exposed to client commands
-    public Response internalSave() {
-        // This directly calls the save command's execute method with a dummy SaveCommand DTO
-        return ((Save) commandInstances.get("save")).execute(new SaveCommand("internal"));
+    public void internalSave() {
+        try {
+            String filePath = System.getenv("COLLECTION_FILE_PATH");
+            if (filePath == null) {
+                throw new IllegalArgumentException("COLLECTION_FILE_PATH environment variable not set.");
+            }
+            fileManager.saveCollectionToXml(filePath);
+            System.out.println("Collection successfully saved to file.");
+        } catch (Exception e) {
+            System.err.println("Error saving collection: " + e.getMessage());
+        }
     }
 }
