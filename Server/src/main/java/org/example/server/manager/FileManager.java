@@ -7,9 +7,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
@@ -53,20 +50,6 @@ public class FileManager {
             System.out.println("Collection saved successfully!");
         } catch (Exception e) {
             System.out.println("Error saving collection: " + e.getMessage());
-        }
-    }
-
-    public List<String> readScript(String scriptFilePath) {
-        Path path = Paths.get(scriptFilePath);
-        try {
-            if (!Files.exists(path) || !Files.isReadable(path)) {
-                System.err.println("Script file not found or not readable: " + scriptFilePath);
-                return List.of(); // Return empty list
-            }
-            return Files.readAllLines(path);
-        } catch (IOException e) {
-            System.err.println("Error reading script file " + scriptFilePath + ": " + e.getMessage());
-            return List.of();
         }
     }
 }
