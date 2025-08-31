@@ -4,10 +4,7 @@ import org.example.client.network.UDPClient;
 import org.example.client.util.CommandParser;
 import org.example.client.util.ConsoleIOService;
 import org.example.client.util.IOService;
-import org.example.common.command.Command;
-import org.example.common.command.ExecuteScriptCommand;
-import org.example.common.command.HelpCommand;
-import org.example.common.command.ShowCommand;
+import org.example.common.command.*;
 import org.example.common.data.Person;
 import org.example.common.response.Response;
 
@@ -56,29 +53,28 @@ public class ClientMain {
 
                 Command command ;
                 try {
-                    if (line.trim().toLowerCase().startsWith("exit")) {
-                        ioService.print("Exiting client application. Goodbye!");
-                        break;
-                    }
-                    if (line.trim().toLowerCase().startsWith("execute_script")) {
-                        String filePath = line.trim().split("\\s+", 2).length > 1 ? line.trim().split("\\s+", 2)[1] : "";
-                        if (filePath.isEmpty()) {
-                            ioService.print("Client Command Error: execute_script requires a file path.");
-                            continue;
-                        }
-                        commandParser.runLocalCommand(new ExecuteScriptCommand(filePath));
-                        continue;
-                    }
-
                     // For all other commands, parse and send to server
                     command = commandParser.parseCommand(line);
-                } catch (IllegalArgumentException | ClassNotFoundException e) {
+                } catch (IllegalArgumentException e) {
                     ioService.print("Client Command Error: " + e.getMessage());
                     continue;
                 } catch (IOException e) {
                     ioService.print("Input/Output error: " + e.getMessage());
                     continue;
                 }
+
+
+                // Prevent local commands from being sent to the server (Local commands are handled locally)
+                if (command instanceof ExecuteScriptCommand || command instanceof ExitCommand) {
+                    try {
+                        commandParser.runLocalCommand(command);
+                    } catch (Exception e) {
+                        ioService.print("Error running local command: " + e.getMessage());
+                    }
+                    continue;
+                }
+
+
 
                 // If the command is null (e.g., if a local command was handled), skip the rest
                 if (command == null) {

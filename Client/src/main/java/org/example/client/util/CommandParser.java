@@ -28,7 +28,12 @@ public class CommandParser {
 
 
     public void runLocalCommand(Command command) throws IOException, ClassNotFoundException{
-        if(command instanceof ExecuteScriptCommand) executeScript((ExecuteScriptCommand) command);
+        if(command instanceof ExecuteScriptCommand) {
+            executeScript((ExecuteScriptCommand) command);
+        }else if (command instanceof ExitCommand){
+            ioService.print("Exiting client application! Goodbye");
+            System.exit(0);
+        }
     }
 
     public Command parseCommand(String input) throws IOException {
