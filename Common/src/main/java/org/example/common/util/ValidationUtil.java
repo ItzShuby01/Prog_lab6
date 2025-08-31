@@ -1,8 +1,6 @@
 package org.example.common.util;
 
-import org.example.common.data.Country;
-import org.example.common.data.EyeColor;
-import org.example.common.data.HairColor;
+import org.example.common.data.*;
 
 import java.util.Arrays;
 
@@ -106,6 +104,48 @@ public class ValidationUtil {
             return "Invalid number format for " + INPUTS_LABELS[index] + ".";
         }
     }
+
+
+    public static String validatePerson(Person person) {
+        if (person == null) {
+            return "Person object cannot be null.";
+        }
+        if (person.getName() == null || person.getName().isBlank()) {
+            return "Person name cannot be empty.";
+        }
+        Coordinates coordinates = person.getCoordinates();
+        if (coordinates == null) {
+            return "Person coordinates cannot be null.";
+        }
+        if (coordinates.getX() > 629) {
+            return "Coordinate x must be less than 630 (max 629).";
+        }
+        if (Double.isNaN(coordinates.getY()) || Double.isInfinite(coordinates.getY())) {
+            return "Coordinate y cannot be NaN or Infinity.";
+        }
+        if (Double.isNaN(person.getHeight()) || Double.isInfinite(person.getHeight()) || person.getHeight() <= 0) {
+            return "Height must be positive and finite (no NaN/Infinity).";
+        }
+        if (person.getEyeColor() == null) return "Eye color cannot be null.";
+        if (person.getHairColor() == null) return "Hair color cannot be null.";
+        Location loc = person.getLocation();
+        if (loc != null) {
+            if (Float.isNaN(loc.getX()) || Float.isInfinite(loc.getX())) {
+                return "Location x cannot be NaN or Infinity.";
+            }
+            if (Float.isNaN(loc.getY()) || Float.isInfinite(loc.getY())) {
+                return "Location y cannot be NaN or Infinity.";
+            }
+            if (loc.getName() == null || loc.getName().isBlank()) {
+                return "Location name cannot be empty if location is provided.";
+            }
+            if (loc.getName().length() > 530) {
+                return "Location name cannot exceed 530 characters.";
+            }
+        }
+        return null; // All checks passed
+    }
+
 
     //  Methods for direct validation  for script parsing on server
     public static int validateInt(String value, String fieldName) throws IllegalArgumentException {
