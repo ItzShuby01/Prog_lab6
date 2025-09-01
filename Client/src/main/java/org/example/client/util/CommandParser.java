@@ -27,7 +27,7 @@ public class CommandParser {
     }
 
 
-    public void runLocalCommand(Command command) throws IOException, ClassNotFoundException{
+    public void runLocalCommand(Command command) throws IOException {
         if(command instanceof ExecuteScriptCommand) {
             executeScript((ExecuteScriptCommand) command);
         }else if (command instanceof ExitCommand){
@@ -92,7 +92,7 @@ public class CommandParser {
         }
     }
 
-    private void executeScript(ExecuteScriptCommand command) throws IOException, ClassNotFoundException {
+    private void executeScript(ExecuteScriptCommand command) throws IOException {
         String filePath = command.getArg();
         ioService.print("Executing script from file: " + filePath);
 
@@ -104,20 +104,69 @@ public class CommandParser {
         try {
             executingScripts.add(filePath);
             List<String> scriptLines = Files.readAllLines(Path.of(filePath));
+            int lineIndex = 0;
 
-            for (String line : scriptLines) {
-                if (line.trim().isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
+            while(lineIndex < scriptLines.size()){
+                String line = scriptLines.get(lineIndex++).trim();
+                if (line.isEmpty() || line.startsWith("#")) continue;
+
+                String[] parts = line.split("\\s+", 2);
+                String commandName = parts[0].toLowerCase();
+                String arg = parts.length > 1 ? parts[1].trim() : "";
 
                 ioService.print("--- Executing command from script: " + line);
-                Command cmdFromScript = parseCommand(line);
 
-                if (cmdFromScript instanceof ExecuteScriptCommand) {
-                    runLocalCommand(cmdFromScript);
-                } else {
-                    Response response = client.sendAndReceive(cmdFromScript);
-                    ioService.print("Server Response for '" + line + "': " + response.getMessage());
+                Command cmdFromScript;
+                try {
+                    switch (commandName) {
+                        case "add":
+                        case "add_if_max":
+                        case "update":
+                        case "remove_lower":
+                            // Read the next 10 lines for the Person object
+                            if (lineIndex + 10 > scriptLines.size()) {
+                                throw new IllegalArgumentException("Script ended unexpectedly. Missing person details.");
+                            }
+                            List<String> personData = scriptLines.subList(lineIndex, lineIndex + 10);
+                            Person person = PersonBuilder.buildFromScript(personData);
+                            lineIndex += 10;
+
+                            // Add / AddIfMax / Update / RemoveLower can take inputs from a script file
+                            switch (commandName) {
+                                case "add":
+                                    cmdFromScript = new AddCommand(arg, person);
+                                    break;
+                                case "add_if_max":
+                                    cmdFromScript = new AddIfMaxCommand(arg, person);
+                                    break;
+                                case "update":
+                                    cmdFromScript = new UpdateCommand(arg, person);
+                                    break;
+                                case "remove_lower":
+                                    cmdFromScript = new RemoveLowerCommand(arg, person);
+                                    break;
+                                default:
+                                    throw new IllegalStateException("Invalid command state.");
+                            }
+                            break;
+                        case "exit":
+                            cmdFromScript = new ExitCommand(arg);
+                            break;
+
+                        default:
+                            // For all other commands, parse as a single line
+                            cmdFromScript = parseCommand(line);
+                            break;
+                    }
+
+                    if (cmdFromScript instanceof ExecuteScriptCommand || cmdFromScript instanceof ExitCommand) {
+                        runLocalCommand(cmdFromScript);
+                    } else {
+                        Response response = client.sendAndReceive(cmdFromScript);
+                        ioService.print("Server Response for '" + line + "': " + response.getMessage());
+                    }
+                } catch (Exception e) {
+                    ioService.print("Error in script at line " + lineIndex + ": " + e.getMessage());
                 }
             }
         } finally {
